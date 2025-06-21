@@ -7,10 +7,19 @@ import pickle
 import numpy as np
 from PIL import Image as PILImage  # Avoid name conflict with .models.Image
 
-# Load ML model from file
-model_path = os.path.join(os.path.dirname(__file__), 'model.pkl')
-with open(model_path, 'rb') as file:
-    model = pickle.load(file)
+# Initialize model as None
+model = None
+
+# Try to load ML model from file if it exists and is valid
+model_path = os.path.join(os.path.dirname(__file__), 'model', 'model.pkl')
+try:
+    if os.path.exists(model_path) and os.path.getsize(model_path) > 100:  # Basic check for non-empty file
+        with open(model_path, 'rb') as file:
+            model = pickle.load(file)
+    else:
+        print(f"Warning: Model file not found or too small at {model_path}")
+except Exception as e:
+    print(f"Error loading model: {e}")
 
 # ---------------------- INDEX ----------------------
 def index(request):
@@ -92,19 +101,36 @@ def gallery(request):
 
 # ---------------------- PREDICTION ----------------------
 def prediction(request):
-    prediction_result = None
-    if request.method == 'POST' and request.FILES.get('image'):
-        image_file = request.FILES['image']
-
-        # Preprocess image
-        img = PILImage.open(image_file).convert('L').resize((64, 64))  # grayscale, resize
-        data = np.array(img).flatten().reshape(1, -1)  # shape: (1, 4096)
-
-        # Predict
-        result = model.predict(data)[0]
-        prediction_result = f"Prediction: {result}"
-
-    return render(request, 'prediction.html', {'prediction': prediction_result})
+    if request.method == 'POST':
+        if model is None:
+            return render(request, 'prediction.html', {
+                'error': 'Model not loaded. Please contact the administrator.'
+            })
+            
+        try:
+            image_file = request.FILES['image']
+            
+            # Process the image and make prediction
+            img = PILImage.open(image_file)
+            img = img.resize((224, 224))  # Adjust size as needed
+            img_array = np.array(img) / 255.0
+            img_array = np.expand_dims(img_array, axis=0)
+            
+            prediction = model.predict(img_array)
+            
+            return render(request, 'prediction.html', {
+                'prediction': prediction,
+                'model_loaded': True
+            })
+        except Exception as e:
+            return render(request, 'prediction.html', {
+                'error': f'Error processing image: {str(e)}',
+                'model_loaded': model is not None
+            })
+    
+    return render(request, 'prediction.html', {
+        'model_loaded': model is not None
+    })
 
 # ---------------------- MODULE TRAIN PAGE ----------------------
 def module(request):
