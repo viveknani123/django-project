@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Prediction</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <div class="container mt-5">
+    <h2 class="text-center">Smartphone Addiction Prediction</h2>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label>Feature 1:</label>
+        <input type="number" name="feature1" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label>Feature 2:</label>
+        <input type="number" name="feature2" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label>Feature 3:</label>
+        <input type="number" name="feature3" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label>Feature 4:</label>
+        <input type="number" name="feature4" class="form-control" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Predict</button>
+    </form>
+
+    {% if result %}
+      <div class="alert alert-info mt-3">
+        <h4>Prediction Result: {{ result }}</h4>
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>

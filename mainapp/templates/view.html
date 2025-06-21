@@ -1,0 +1,23 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Uploaded Images</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <div class="container">
+    <h2>Uploaded Images</h2>
+    <div class="row">
+      {% for image in images %}
+        <div class="col-md-4">
+          <img src="{{ image.image.url }}" class="img-fluid" alt="Image">
+          <p>Uploaded at: {{ image.uploaded_at }}</p>
+        </div>
+      {% empty %}
+        <p>No images uploaded yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+</html>
