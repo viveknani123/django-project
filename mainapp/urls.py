@@ -10,5 +10,6 @@ urlpatterns = [
     path('userhome/', views.userhome, name='userhome'),
     path('prediction/', views.prediction, name='prediction'),
     path('graph/', views.graph, name='graph'),
+    path('gallery/', views.gallery, name='gallery'),
+     path('module/', views.module, name='module'),
 ]
-
