@@ -1,42 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>Prediction Graph</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-  {% include 'navbar.html' %}
-  <div class="container mt-5">
-    <h3>Prediction Graph</h3>
-    {% if predictions %}
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th>User</th>
-            <th>Prediction</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-        {% for prediction in predictions %}
-          <tr>
-            <td>{{ prediction.user }}</td>
-            <td>{{ prediction.result }}</td>
-            <td>{{ prediction.date|date:"Y-m-d H:i" }}</td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-      <!-- Placeholder for a graph/plot, e.g., using Chart.js or similar -->
-      <div>
-        <!-- You can embed a graph here if desired -->
-      </div>
-    {% else %}
-      <p><em>No predictions found.</em></p>
-    {% endif %}
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <h3>Prediction Graph</h3>
+  {% if predictions %}
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Prediction</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for prediction in predictions %}
+        <tr>
+          <td>{{ prediction.user }}</td>
+          <td>{{ prediction.result }}</td>
+          <td>{{ prediction.date|date:"Y-m-d H:i" }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <!-- Placeholder for a graph/plot, e.g., using Chart.js or similar -->
+    <div>
+      <!-- You can embed a graph here if desired -->
+    </div>
+  {% else %}
+    <p><em>No predictions found.</em></p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -2,23 +2,23 @@
 
 {% block content %}
 <div class="container mt-5" style="max-width: 500px;">
-  <h3 class="mb-4 text-center">Predict Mobile Addiction</h3>
+  <h3 class="mb-4 text-center">Upload an Image</h3>
   <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
     <div class="mb-3">
-      <label for="image" class="form-label">Upload your image</label>
+      <label for="image" class="form-label">Choose an image to upload</label>
       <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
     </div>
     {% if error %}
       <div class="alert alert-danger">{{ error }}</div>
     {% endif %}
     <div class="d-grid gap-2">
-      <button type="submit" class="btn btn-primary">Predict</button>
+      <button type="submit" class="btn btn-primary">Upload</button>
     </div>
   </form>
-  {% if prediction %}
-    <div class="alert alert-info mt-4 text-center">
-      <strong>Prediction:</strong> {{ prediction }}
+  {% if message %}
+    <div class="alert alert-success mt-4 text-center">
+      {{ message }}
     </div>
   {% endif %}
 </div>
