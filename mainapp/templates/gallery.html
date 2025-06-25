@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
   <title>Gallery</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -15,12 +17,17 @@
         <div class="row">
           {% for image in gallery.images.all %}
             <div class="col-md-3">
-              <img src="{{ image.image.url }}" class="img-thumbnail mb-2">
+              <img src="{{ image.image.url }}" class="img-thumbnail mb-2" alt="Gallery Image">
             </div>
+          {% empty %}
+            <div class="col-12"><em>No images in this gallery.</em></div>
           {% endfor %}
         </div>
       </div>
+    {% empty %}
+      <p><em>No galleries found.</em></p>
     {% endfor %}
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

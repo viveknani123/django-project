@@ -1,35 +1,35 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from .models import Register, UploadedImage, PredictionModel, Gallery
+from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
+from django.utils.crypto import get_random_string
+from django.views.decorators.csrf import csrf_protect
+from .models import Register, UploadedImage, PredictionModel, Gallery
+from django.db import IntegrityError
 import os
 import pickle
 import numpy as np
-from PIL import Image as PILImage  # Avoid name conflict with .models.Image
+from PIL import Image as PILImage
 
-# Initialize model as None
+# Load ML model at startup (if exists)
 model = None
+MODEL_DIR = os.path.join(os.path.dirname(__file__), 'model')
+MODEL_PATH = os.path.join(MODEL_DIR, 'model.pkl')
+if os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH) > 100:
+    try:
+        with open(MODEL_PATH, 'rb') as f:
+            model = pickle.load(f)
+    except Exception as e:
+        print(f"Error loading model: {e}")
+else:
+    print(f"Warning: Model not found or is too small at {MODEL_PATH}")
 
-# Try to load ML model from file if it exists and is valid
-model_path = os.path.join(os.path.dirname(__file__), 'model', 'model.pkl')
-try:
-    if os.path.exists(model_path) and os.path.getsize(model_path) > 100:  # Basic check for non-empty file
-        with open(model_path, 'rb') as file:
-            model = pickle.load(file)
-    else:
-        print(f"Warning: Model file not found or too small at {model_path}")
-except Exception as e:
-    print(f"Error loading model: {e}")
-
-# ---------------------- INDEX ----------------------
 def index(request):
     return render(request, 'index.html')
 
-# ---------------------- ABOUT ----------------------
 def about(request):
     return render(request, 'about.html')
 
-# ---------------------- REGISTER ---------------------
+@csrf_protect
 def register(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -40,86 +40,104 @@ def register(request):
         contact = request.POST.get('contact')
 
         if password != conpassword:
-            return render(request, 'register.html', {'message': "Passwords don't match"})
+            messages.error(request, "Passwords don't match")
+            return render(request, 'register.html')
 
-        user = Register.objects.create(
-            name=name, email=email, password=password,
-            age=age, contact=contact
-        )
+        if Register.objects.filter(email=email).exists():
+            messages.error(request, "Email already registered")
+            return render(request, 'register.html')
 
-        request.session['user_id'] = user.id
-        return redirect('userhome')
+        try:
+            user = Register.objects.create(
+                name=name,
+                email=email,
+                password=password,  # For real security, hash the password!
+                age=age,
+                contact=contact,
+            )
+            request.session['user_id'] = user.id
+            messages.success(request, "Registration successful!")
+            return redirect('userhome')
+        except IntegrityError:
+            messages.error(request, "Registration failed due to a database error")
+        except Exception as e:
+            messages.error(request, f"Registration failed: {e}")
 
     return render(request, 'register.html')
 
-# ---------------------- LOGIN ----------------------
+@csrf_protect
 def login(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
-
         try:
             user = Register.objects.get(email=email, password=password)
             request.session['user_id'] = user.id
+            messages.success(request, "Login successful!")
             return redirect('userhome')
         except Register.DoesNotExist:
-            return render(request, 'login.html', {'message': 'Invalid login'})
+            messages.error(request, 'Invalid email or password')
 
     return render(request, 'login.html')
 
-# ---------------------- LOGOUT ----------------------
 def logout(request):
     request.session.flush()
+    messages.success(request, "Logged out successfully!")
     return redirect('index')
 
-# ---------------------- USER HOME ----------------------
 def userhome(request):
     if 'user_id' not in request.session:
         return redirect('login')
     return render(request, 'userhome.html')
 
-# ---------------------- IMAGE UPLOAD ----------------------
+@csrf_protect
 def upload_image(request):
-    message = ""
+    if 'user_id' not in request.session:
+        return redirect('login')
     if request.method == 'POST' and request.FILES.get('image'):
         image = request.FILES['image']
+        if not image.content_type.startswith('image/'):
+            messages.error(request, 'Please upload a valid image file.')
+            return render(request, 'upload_image.html')
+        filename = get_random_string(8) + '_' + image.name
         fs = FileSystemStorage()
-        filename = fs.save(image.name, image)
-        UploadedImage.objects.create(image=filename)
-        message = "Image uploaded successfully!"
-    return render(request, 'upload_image.html', {'message': message})
+        saved_name = fs.save(filename, image)
+        UploadedImage.objects.create(image=saved_name)
+        messages.success(request, "Image uploaded successfully!")
+    return render(request, 'upload_image.html')
 
-# ---------------------- VIEW IMAGES ----------------------
 def view(request):
+    if 'user_id' not in request.session:
+        return redirect('login')
     images = UploadedImage.objects.all()
     return render(request, 'view.html', {'images': images})
 
-# ---------------------- GALLERY ----------------------
 def gallery(request):
+    if 'user_id' not in request.session:
+        return redirect('login')
     galleries = Gallery.objects.all()
     return render(request, 'gallery.html', {'galleries': galleries})
 
-# ---------------------- PREDICTION ----------------------
+@csrf_protect
 def prediction(request):
+    if 'user_id' not in request.session:
+        return redirect('login')
     if request.method == 'POST':
         if model is None:
             return render(request, 'prediction.html', {
-                'error': 'Model not loaded. Please contact the administrator.'
+                'error': 'Model not loaded. Please contact the administrator.',
+                'model_loaded': False
             })
-            
         try:
             image_file = request.FILES['image']
-            
-            # Process the image and make prediction
             img = PILImage.open(image_file)
-            img = img.resize((224, 224))  # Adjust size as needed
+            img = img.resize((224, 224))
             img_array = np.array(img) / 255.0
             img_array = np.expand_dims(img_array, axis=0)
-            
-            prediction = model.predict(img_array)
-            
+            pred_val = model.predict(img_array)
+            pred_result = getattr(pred_val, 'tolist', lambda: pred_val)()
             return render(request, 'prediction.html', {
-                'prediction': prediction,
+                'prediction': pred_result,
                 'model_loaded': True
             })
         except Exception as e:
@@ -127,16 +145,17 @@ def prediction(request):
                 'error': f'Error processing image: {str(e)}',
                 'model_loaded': model is not None
             })
-    
     return render(request, 'prediction.html', {
         'model_loaded': model is not None
     })
 
-# ---------------------- MODULE TRAIN PAGE ----------------------
 def module(request):
+    if 'user_id' not in request.session:
+        return redirect('login')
     return render(request, 'module.html')
 
-# ---------------------- GRAPH VIEW ----------------------
 def graph(request):
+    if 'user_id' not in request.session:
+        return redirect('login')
     predictions = PredictionModel.objects.all()
     return render(request, 'graph.html', {'predictions': predictions})

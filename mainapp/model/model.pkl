@@ -1,3 +1,2 @@
-import pickle
-with open('model.pkl', 'wb') as f:
-    pickle.dump(trained_model, f)
+
+python -c "import pickle; from sklearn.linear_model import LogisticRegression; model = LogisticRegression(); pickle.dump(model, open('model.pkl', 'wb'))"
