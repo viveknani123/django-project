@@ -59,19 +59,26 @@ def register(request):
 
     return render(request, 'register.html')
 
+from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.shortcuts import render, redirect
+from django.contrib import messages
+@login_required  
 @csrf_protect
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+
         user = authenticate(request, username=username, password=password)
         if user is not None:
             auth_login(request, user)
             if user.is_superuser:
-                return redirect('/admin/')
-            return redirect('userhome')
+                return redirect('/admin/')  # Redirect superuser to admin panel
+            return redirect('userhome')  # Redirect normal users to user home page
         else:
-            messages.error(request, 'Invalid username or password')
+            messages.error(request, 'Invalid username or password')  # Show error message
+    
     return render(request, 'login.html')
 
 @login_required
@@ -178,7 +185,6 @@ def predict(request):
 from django.contrib.auth.decorators import login_required
 
 @login_required
-@login_required
 def graph(request):
     records = PredictionRecord.objects.filter(user=request.user).order_by('created_at')
     labels = [record.created_at.strftime("%Y-%m-%d %H:%M") for record in records]
@@ -196,9 +202,29 @@ def graph(request):
         'labels': json.dumps(labels),
         'data': json.dumps(data)
     })
+
+
 @login_required
 def train(request):
     if request.method == 'POST':
-        # training logic here
-        return render(request, 'module.html', {'message': 'Training complete!'})
-    return render(request, 'module.html')
+        dataset = request.FILES.get('dataset')
+
+        if not dataset:
+              return render(request, 'train.html'),{'error': 'Please upload a dataset file.'},
+
+        # Optional file type validation
+        if not dataset.name.endswith(('.csv', '.xlsx')):
+            return render(request, 'train.html', {'error': 'Invalid file type. Upload CSV or XLSX only.'})
+
+        # Save the file (optional: you can directly use it for training without saving)
+        save_path = os.path.join('uploads', dataset.name)
+        with open(save_path, 'wb+') as destination:
+            for chunk in dataset.chunks():
+                destination.write(chunk)
+
+        # 🛠️ Your ML training logic here
+        # Example: load dataset, fit model, etc.
+
+        return render(request, 'train.html', {'message': 'Training complete!'})
+
+    return render(request, 'train.html')
