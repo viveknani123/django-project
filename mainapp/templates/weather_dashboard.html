@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weather Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #eaeef1;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      height: 100vh;
+    }
+    .dashboard {
+      margin-top: 5rem;
+      background: #fff;
+      padding: 2rem 2.5rem 2rem 2.5rem;
+      border-radius: 1.3rem;
+      box-shadow: 0 2px 20px #0001;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    .dashboard h2 {
+      margin-bottom: 1rem;
+      color: #2d3e50;
+    }
+    .input-group {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.3rem;
+    }
+    .input-group input {
+      padding: 0.5rem 1rem;
+      border: 1px solid #bfc5cd;
+      border-radius: 5px 0 0 5px;
+      font-size: 1rem;
+      outline: none;
+      width: 180px;
+    }
+    .input-group button {
+      padding: 0.5rem 1.1rem;
+      border: none;
+      background: #3db3ff;
+      color: #fff;
+      border-radius: 0 5px 5px 0;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .input-group button:hover {
+      background: #2599e6;
+    }
+    .weather-info {
+      margin-top: 1.5rem;
+      background: #f2f7fa;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 1px 8px #0002;
+    }
+    .weather-info .city {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 0.4rem;
+      color: #2976c2;
+    }
+    .weather-info .temp {
+      font-size: 2.8rem;
+      font-weight: bold;
+      color: #fda502;
+      margin-bottom: 0.2rem;
+    }
+    .weather-info .desc {
+      font-size: 1.1rem;
+      text-transform: capitalize;
+      color: #555;
+      margin-bottom: 0.5rem;
+    }
+    .weather-info .details {
+      font-size: 0.97rem;
+      color: #444;
+    }
+    .error {
+      color: #d32f2f;
+      margin-top: 1.1rem;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <h2>Weather Dashboard</h2>
+    <div class="input-group">
+      <input type="text" id="city-input" placeholder="Enter city (e.g. London)">
+      <button onclick="getWeather()">Get Weather</button>
+    </div>
+    <div id="weather" class="weather-info" style="display:none;"></div>
+    <div id="error" class="error"></div>
+  </div>
+  <script>
+    const apiKey = 'YOUR_OPENWEATHERMAP_API_KEY'; // <-- Replace with your own API key
+
+    function getWeather() {
+      const weatherDiv = document.getElementById('weather');
+      const errorDiv = document.getElementById('error');
+      const city = document.getElementById('city-input').value.trim();
+      weatherDiv.style.display = 'none';
+      errorDiv.textContent = '';
+
+      if (!city) {
+        errorDiv.textContent = 'Please enter a city name.';
+        return;
+      }
+
+      fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric`)
+        .then(response => {
+          if (!response.ok) throw new Error('City not found');
+          return response.json();
+        })
+        .then(data => {
+          weatherDiv.innerHTML = `
+            <div class="city">${data.name}, ${data.sys.country}</div>
+            <div class="temp">${Math.round(data.main.temp)}°C</div>
+            <div class="desc">${data.weather[0].description}</div>
+            <div class="details">
+              <span>Humidity: ${data.main.humidity}%</span><br>
+              <span>Wind: ${data.wind.speed} m/s</span><br>
+              <span>Feels like: ${Math.round(data.main.feels_like)}°C</span>
+            </div>
+          `;
+          weatherDiv.style.display = '';
+        })
+        .catch(err => {
+          errorDiv.textContent = err.message;
+        });
+    }
+
+    // Optionally, auto-get weather for a default city on page load
+    // window.onload = () => {
+    //   document.getElementById('city-input').value = "New York";
+    //   getWeather();
+    // };
+  </script>
+</body>
+</html>

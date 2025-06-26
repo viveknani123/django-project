@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Digital Clock - Multiple Time Zones</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #181e23;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      height: 100vh;
+      margin: 0;
+    }
+    .clock-container {
+      display: flex;
+      gap: 2rem;
+      margin-top: 5rem;
+    }
+    .clock {
+      background: #232b33;
+      border-radius: 1rem;
+      box-shadow: 0 2px 12px #0007;
+      padding: 2rem 3rem;
+      text-align: center;
+      min-width: 220px;
+    }
+    .timezone {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: #fcdc58;
+      letter-spacing: 1px;
+    }
+    .time {
+      font-size: 2.4rem;
+      font-family: monospace;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+    .date {
+      font-size: 1rem;
+      margin-top: 0.7rem;
+      color: #aab6c8;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="clock-container">
+    <div class="clock">
+      <div class="timezone">New York (EST)</div>
+      <div class="time" id="ny-time"></div>
+      <div class="date" id="ny-date"></div>
+    </div>
+    <div class="clock">
+      <div class="timezone">London (GMT)</div>
+      <div class="time" id="ldn-time"></div>
+      <div class="date" id="ldn-date"></div>
+    </div>
+    <div class="clock">
+      <div class="timezone">India (IST)</div>
+      <div class="time" id="ind-time"></div>
+      <div class="date" id="ind-date"></div>
+    </div>
+    <div class="clock">
+      <div class="timezone">Tokyo (JST)</div>
+      <div class="time" id="tokyo-time"></div>
+      <div class="date" id="tokyo-date"></div>
+    </div>
+  </div>
+  <script>
+    function updateClocks() {
+      // Set up time zones
+      const zones = [
+        { id: 'ny', timeZone: 'America/New_York', label: 'New York' },
+        { id: 'ldn', timeZone: 'Europe/London', label: 'London' },
+        { id: 'ind', timeZone: 'Asia/Kolkata', label: 'India' },
+        { id: 'tokyo', timeZone: 'Asia/Tokyo', label: 'Tokyo' }
+      ];
+
+      zones.forEach(zone => {
+        const now = new Date();
+        const options = {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+          timeZone: zone.timeZone
+        };
+        const dateOptions = {
+          weekday: 'short',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          timeZone: zone.timeZone
+        };
+        document.getElementById(zone.id + '-time').textContent =
+          now.toLocaleTimeString('en-US', options);
+        document.getElementById(zone.id + '-date').textContent =
+          now.toLocaleDateString('en-US', dateOptions);
+      });
+    }
+
+    updateClocks();
+    setInterval(updateClocks, 1000);
+  </script>
+</body>
+</html>

@@ -1,33 +1,44 @@
 {% extends "base.html" %}
-
 {% block content %}
 <div class="container mt-5">
-  <h3>Prediction Graph</h3>
-  {% if predictions %}
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>User</th>
-          <th>Prediction</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-      <tbody>
-      {% for prediction in predictions %}
-        <tr>
-          <td>{{ prediction.user }}</td>
-          <td>{{ prediction.result }}</td>
-          <td>{{ prediction.date|date:"Y-m-d H:i" }}</td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-    <!-- Placeholder for a graph/plot, e.g., using Chart.js or similar -->
-    <div>
-      <!-- You can embed a graph here if desired -->
-    </div>
-  {% else %}
-    <p><em>No predictions found.</em></p>
-  {% endif %}
+  <h3 class="mb-4 text-center">Your Mobile Addiction Prediction History</h3>
+  <canvas id="myChart"></canvas>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Make sure labels and data are valid JS arrays!
+  const chartLabels = JSON.parse('{{ labels|safe|escapejs }}');
+  const chartData = JSON.parse('{{ data|safe|escapejs }}');
+
+  const ctx = document.getElementById('myChart').getContext('2d');
+  const myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chartLabels,
+      datasets: [{
+        label: 'Risk Level (2=High, 1=Moderate, 0=Low)',
+        data: chartData,
+        fill: false,
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          ticks: {
+            stepSize: 1,
+            callback: function(value) {
+              if (value === 2) return 'High';
+              if (value === 1) return 'Moderate';
+              return 'Low';
+            }
+          },
+          min: 0,
+          max: 2
+        }
+      }
+    }
+  });
+</script>
 {% endblock %}

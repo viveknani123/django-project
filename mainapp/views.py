@@ -3,12 +3,16 @@ from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
 from django.utils.crypto import get_random_string
 from django.views.decorators.csrf import csrf_protect
-from .models import Register, UploadedImage, PredictionModel, Gallery
-from django.db import IntegrityError
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from .models import UploadedImage, PredictionModel, Gallery
+from .models import PredictionRecord
+import joblib
 import os
 import pickle
 import numpy as np
-from PIL import Image as PILImage
+import json
 
 # Load ML model at startup (if exists)
 model = None
@@ -32,68 +36,57 @@ def about(request):
 @csrf_protect
 def register(request):
     if request.method == 'POST':
-        name = request.POST.get('name')
+        username = request.POST.get('username')
         email = request.POST.get('email')
         password = request.POST.get('password')
         conpassword = request.POST.get('conpassword')
-        age = request.POST.get('age')
-        contact = request.POST.get('contact')
 
         if password != conpassword:
             messages.error(request, "Passwords don't match")
             return render(request, 'register.html')
 
-        if Register.objects.filter(email=email).exists():
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists")
+            return render(request, 'register.html')
+        if User.objects.filter(email=email).exists():
             messages.error(request, "Email already registered")
             return render(request, 'register.html')
 
-        try:
-            user = Register.objects.create(
-                name=name,
-                email=email,
-                password=password,  # For real security, hash the password!
-                age=age,
-                contact=contact,
-            )
-            request.session['user_id'] = user.id
-            messages.success(request, "Registration successful!")
-            return redirect('userhome')
-        except IntegrityError:
-            messages.error(request, "Registration failed due to a database error")
-        except Exception as e:
-            messages.error(request, f"Registration failed: {e}")
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.save()
+        messages.success(request, "Registration successful! You can now login.")
+        return redirect('login')
 
     return render(request, 'register.html')
 
 @csrf_protect
-def login(request):
+def login_view(request):
     if request.method == 'POST':
-        email = request.POST.get('email')
+        username = request.POST.get('username')
         password = request.POST.get('password')
-        try:
-            user = Register.objects.get(email=email, password=password)
-            request.session['user_id'] = user.id
-            messages.success(request, "Login successful!")
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            auth_login(request, user)
+            if user.is_superuser:
+                return redirect('/admin/')
             return redirect('userhome')
-        except Register.DoesNotExist:
-            messages.error(request, 'Invalid email or password')
-
+        else:
+            messages.error(request, 'Invalid username or password')
     return render(request, 'login.html')
 
-def logout(request):
-    request.session.flush()
+@login_required
+def logout_view(request):
+    auth_logout(request)
     messages.success(request, "Logged out successfully!")
-    return redirect('index')
+    return redirect('home')
 
+@login_required
 def userhome(request):
-    if 'user_id' not in request.session:
-        return redirect('login')
+    # Optionally show a different page for admins, or redirect to admin panel above!
     return render(request, 'userhome.html')
 
-@csrf_protect
+@login_required
 def upload_image(request):
-    if 'user_id' not in request.session:
-        return redirect('login')
     if request.method == 'POST' and request.FILES.get('image'):
         image = request.FILES['image']
         if not image.content_type.startswith('image/'):
@@ -106,56 +99,106 @@ def upload_image(request):
         messages.success(request, "Image uploaded successfully!")
     return render(request, 'upload_image.html')
 
+@login_required
 def view(request):
-    if 'user_id' not in request.session:
-        return redirect('login')
     images = UploadedImage.objects.all()
     return render(request, 'view.html', {'images': images})
 
+@login_required
 def gallery(request):
-    if 'user_id' not in request.session:
-        return redirect('login')
     galleries = Gallery.objects.all()
     return render(request, 'gallery.html', {'galleries': galleries})
 
+@login_required
 @csrf_protect
-def prediction(request):
-    if 'user_id' not in request.session:
-        return redirect('login')
+@login_required
+
+def predict(request):
+    prediction = None
+    error = None
+    feedback = []
+    tips = []
     if request.method == 'POST':
-        if model is None:
-            return render(request, 'prediction.html', {
-                'error': 'Model not loaded. Please contact the administrator.',
-                'model_loaded': False
-            })
         try:
-            image_file = request.FILES['image']
-            img = PILImage.open(image_file)
-            img = img.resize((224, 224))
-            img_array = np.array(img) / 255.0
-            img_array = np.expand_dims(img_array, axis=0)
-            pred_val = model.predict(img_array)
-            pred_result = getattr(pred_val, 'tolist', lambda: pred_val)()
-            return render(request, 'prediction.html', {
-                'prediction': pred_result,
-                'model_loaded': True
-            })
+            screen_time = float(request.POST.get('screen_time'))
+            unlocks = int(request.POST.get('unlocks'))
+            social_media = float(request.POST.get('social_media'))
+            restless = int(request.POST.get('restless'))
+            morning_check = int(request.POST.get('morning_check'))
+
+            features = [[screen_time, unlocks, social_media, restless, morning_check]]
+            prediction_num = model.predict(features)[0]
+
+            # Feedback
+            if screen_time > 5:
+                feedback.append("Your screen time is high. Try to limit daily usage.")
+            if unlocks > 50:
+                feedback.append("Frequent phone unlocking detected.")
+            if social_media > 3:
+                feedback.append("A lot of time spent on social media apps.")
+            if restless:
+                feedback.append("You feel restless without your phone.")
+            if morning_check:
+                feedback.append("Checking your phone first thing in the morning is a sign of dependency.")
+
+            # Tips (always shown)
+            tips = [
+                "Set daily app usage limits.",
+                "Leave your phone outside the bedroom at night.",
+                "Schedule phone-free activities.",
+                "Try digital detox days."
+            ]
+
+            if prediction_num == 2:
+                prediction = "You are at HIGH risk of mobile addiction."
+            elif prediction_num == 1:
+                prediction = "You show MODERATE signs of mobile addiction."
+            else:
+                prediction = "You have a LOW risk of mobile addiction."
+
+            # Save to database
+            PredictionRecord.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                screen_time=screen_time,
+                unlocks=unlocks,
+                social_media=social_media,
+                restless=bool(restless),
+                morning_check=bool(morning_check),
+                result=prediction
+            )
+
         except Exception as e:
-            return render(request, 'prediction.html', {
-                'error': f'Error processing image: {str(e)}',
-                'model_loaded': model is not None
-            })
-    return render(request, 'prediction.html', {
-        'model_loaded': model is not None
+            error = f"Invalid input: {str(e)}"
+    return render(request, 'predict.html', {
+        'prediction': prediction,
+        'error': error,
+        'feedback': feedback,
+        'tips': tips,
     })
+from django.contrib.auth.decorators import login_required
 
-def module(request):
-    if 'user_id' not in request.session:
-        return redirect('login')
-    return render(request, 'module.html')
-
+@login_required
+@login_required
 def graph(request):
-    if 'user_id' not in request.session:
-        return redirect('login')
-    predictions = PredictionModel.objects.all()
-    return render(request, 'graph.html', {'predictions': predictions})
+    records = PredictionRecord.objects.filter(user=request.user).order_by('created_at')
+    labels = [record.created_at.strftime("%Y-%m-%d %H:%M") for record in records]
+    # Map result to numerical risk level: 2=High, 1=Moderate, 0=Low
+    data = []
+    for record in records:
+        if "HIGH" in record.result:
+            data.append(2)
+        elif "MODERATE" in record.result:
+            data.append(1)
+        else:
+            data.append(0)
+    # Pass data as JSON for JS
+    return render(request, 'graph.html', {
+        'labels': json.dumps(labels),
+        'data': json.dumps(data)
+    })
+@login_required
+def train(request):
+    if request.method == 'POST':
+        # training logic here
+        return render(request, 'module.html', {'message': 'Training complete!'})
+    return render(request, 'module.html')

@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block content %}
 <div class="container mt-5" style="max-width: 500px;">
   <h3 class="mb-4 text-center">Register</h3>
@@ -10,19 +9,33 @@
       <input type="text" class="form-control" id="username" name="username" required>
     </div>
     <div class="mb-3">
+      <label for="name" class="form-label">Name</label>
+      <input type="text" class="form-control" id="name" name="name" required>
+    </div>
+    <div class="mb-3">
       <label for="email" class="form-label">Email</label>
       <input type="email" class="form-control" id="email" name="email" required>
     </div>
     <div class="mb-3">
-      <label for="password1" class="form-label">Password</label>
-      <input type="password" class="form-control" id="password1" name="password1" required>
+      <label for="password" class="form-label">Password</label>
+      <input type="password" class="form-control" id="password" name="password" required>
     </div>
     <div class="mb-3">
-      <label for="password2" class="form-label">Confirm Password</label>
-      <input type="password" class="form-control" id="password2" name="password2" required>
+      <label for="conpassword" class="form-label">Confirm Password</label>
+      <input type="password" class="form-control" id="conpassword" name="conpassword" required>
     </div>
-    {% if error %}
-      <div class="alert alert-danger">{{ error }}</div>
+    <div class="mb-3">
+      <label for="age" class="form-label">Age</label>
+      <input type="number" class="form-control" id="age" name="age" required>
+    </div>
+    <div class="mb-3">
+      <label for="contact" class="form-label">Contact</label>
+      <input type="text" class="form-control" id="contact" name="contact" required>
+    </div>
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
     {% endif %}
     <div class="d-grid gap-2">
       <button type="submit" class="btn btn-success">Register</button>
