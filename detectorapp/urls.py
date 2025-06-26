@@ -9,7 +9,7 @@ urlpatterns = [
     path('register/', views.register, name='register'),# Registration
     path('userhome/', views.userhome, name='userhome'),# User Home
     path('graph/', views.graph, name='graph'),         # Graph Page
-    path('gallery/', views.gallery, name='gallery'),   # Gallery
+    path('gallery/', views.gallery_view, name='gallery_view'),
     path('train/', views.train, name='train'),         # Model Training
     path('predict/', views.predict, name='predict'),   # Prediction Page
 ]

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+# User Registration Table
 class Register(models.Model):
     name = models.CharField(max_length=50)
     email = models.EmailField(max_length=50)
@@ -8,25 +9,45 @@ class Register(models.Model):
     age = models.CharField(max_length=50)
     contact = models.CharField(max_length=50, null=True, blank=True, default="Unknown")
 
+    def __str__(self):
+        return self.name
+
+# For uploaded images
 class UploadedImage(models.Model):
     image = models.ImageField(upload_to='images/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.image.name
+
+# Image model for gallery
 class Image(models.Model):
     title = models.CharField(max_length=100)
     image = models.ImageField(upload_to='images/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.title
+
+# Prediction Model
 class PredictionModel(models.Model):
     user = models.ForeignKey(Register, on_delete=models.CASCADE)
     prediction_result = models.CharField(max_length=100)
     prediction_date = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"{self.user.name} - {self.prediction_result}"
+
+# Gallery Model
 class Gallery(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     images = models.ManyToManyField(Image)
 
+    def __str__(self):
+        return self.name
+
+# Prediction Record
 class PredictionRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     screen_time = models.FloatField()
@@ -36,15 +57,7 @@ class PredictionRecord(models.Model):
     morning_check = models.BooleanField()
     result = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
-    from django import forms
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
-
-class RegisterForm(UserCreationForm):
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password1', 'password2']
-
 
     def __str__(self):
         return f"{self.user} - {self.result} ({self.created_at})"
+

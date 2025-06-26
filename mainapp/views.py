@@ -8,6 +8,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from .models import UploadedImage, PredictionModel, Gallery
 from .models import PredictionRecord
+from .models import Gallery  # Adjust this to your model name if different
+
 import joblib
 import os
 import pickle
@@ -112,7 +114,8 @@ def view(request):
     return render(request, 'view.html', {'images': images})
 
 @login_required
-def gallery(request):
+
+def gallery_view(request):
     galleries = Gallery.objects.all()
     return render(request, 'gallery.html', {'galleries': galleries})
 
