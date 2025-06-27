@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Upload Image</h2>
+    <form method="POST" enctype="multipart/form-data" class="p-4 border rounded bg-light">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="id_image" class="form-label">Select Image:</label>
+            <input type="file" name="image" id="id_image" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+</div>
+{% endblock %}
+

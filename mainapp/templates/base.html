@@ -23,6 +23,8 @@
             <li class="nav-item"><a class="nav-link" href="{% url 'train' %}">Train Module</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'graph' %}">Graph</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'predict' %}">Prediction</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'upload_image' %}">Upload Image</a></li>
+
             {% if user.is_authenticated %}
                 <li class="nav-item"><a class="nav-link" href="{% url 'logout' %}">Logout</a></li>
             {% else %}
@@ -36,6 +38,15 @@
     <!-- Navbar End -->
 
     <div class="container mt-4">
+       {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+       {% endif %}
+
         {% block content %}
         {% endblock %}
     </div>

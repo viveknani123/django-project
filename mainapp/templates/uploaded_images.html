@@ -2,13 +2,17 @@
 {% load static %}
 
 {% block content %}
-<div class="container">
+<div class="container mt-5">
   <h2>Uploaded Images</h2>
   <div class="row">
     {% for image in images %}
       <div class="col-md-4 mb-4">
-        <img src="{{ your_model_instance.image.url }}" alt="Uploaded Image">
-        <p>Uploaded at: {{ image.uploaded_at }}</p>
+        <div class="card">
+          <img src="{{ image.image.url }}" class="card-img-top" alt="Uploaded Image">
+          <div class="card-body">
+            <p class="card-text">Uploaded at: {{ image.uploaded_at }}</p>
+          </div>
+        </div>
       </div>
     {% empty %}
       <p>No images uploaded yet.</p>

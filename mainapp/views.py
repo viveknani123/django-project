@@ -9,7 +9,9 @@ from django.contrib.auth.models import User
 from .models import UploadedImage, PredictionModel, Gallery
 from .models import PredictionRecord
 from .models import Gallery  # Adjust this to your model name if different
-
+from .forms import ImageUploadForm
+from .models import Image
+from django.contrib import messages
 import joblib
 import os
 import pickle
@@ -95,17 +97,22 @@ def userhome(request):
     return render(request, 'userhome.html')
 
 @login_required
+@csrf_protect
 def upload_image(request):
     if request.method == 'POST' and request.FILES.get('image'):
         image = request.FILES['image']
         if not image.content_type.startswith('image/'):
             messages.error(request, 'Please upload a valid image file.')
             return render(request, 'upload_image.html')
+
         filename = get_random_string(8) + '_' + image.name
         fs = FileSystemStorage()
         saved_name = fs.save(filename, image)
         UploadedImage.objects.create(image=saved_name)
+
         messages.success(request, "Image uploaded successfully!")
+        return redirect('uploaded_images')  # ✅ This redirect is correctly added
+
     return render(request, 'upload_image.html')
 
 @login_required
@@ -231,3 +238,6 @@ def train(request):
         return render(request, 'train.html', {'message': 'Training complete!'})
 
     return render(request, 'train.html')
+def uploaded_images(request):
+    images = UploadedImage.objects.all().order_by('-uploaded_at')  # Optional: show recent first
+    return render(request, 'uploaded_images.html', {'images': images})

@@ -14,6 +14,9 @@ urlpatterns = [
     path('gallery/', views.gallery_view, name='gallery'),  # ✅ Change this
     path('train/', views.train, name='train'),
     path('predict/', views.predict, name='predict'),
+    path('upload/', views.upload_image, name='upload_image'),
+    path('uploaded-images/', views.uploaded_images, name='uploaded_images'),
 ]
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
