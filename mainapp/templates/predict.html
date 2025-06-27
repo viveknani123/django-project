@@ -1,63 +1,63 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-<div class="container mt-5" style="max-width: 500px;">
-  <h3 class="mb-4 text-center">Mobile Addiction Prediction</h3>
-  <form method="post" novalidate>
-    {% csrf_token %}
-    <div class="mb-3">
-      <label class="form-label">Average daily screen time (hours)</label>
-      <input type="number" step="any" class="form-control" name="screen_time" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Number of times phone is unlocked per day</label>
-      <input type="number" class="form-control" name="unlocks" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Average hours spent on social media daily</label>
-      <input type="number" step="any" class="form-control" name="social_media" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Do you feel restless without your phone? (1 = Yes, 0 = No)</label>
-      <input type="number" class="form-control" name="restless" min="0" max="1" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Do you check your phone first thing in the morning? (1 = Yes, 0 = No)</label>
-      <input type="number" class="form-control" name="morning_check" min="0" max="1" required>
-    </div>
-    <button type="submit" class="btn btn-primary w-100">Predict</button>
-  </form>
+<div class="overlay">
+    <div class="container text-white py-5">
+        <h1 class="mb-4">Prediction</h1>
 
-  {% if prediction %}
-    {% if 'HIGH' in prediction %}
-      <div class="alert alert-danger mt-4">{{ prediction }}</div>
-    {% elif 'MODERATE' in prediction %}
-      <div class="alert alert-warning mt-4">{{ prediction }}</div>
-    {% else %}
-      <div class="alert alert-success mt-4">{{ prediction }}</div>
-    {% endif %}
-    {% if feedback %}
-      <div class="alert alert-warning">
-        <strong>Why?</strong>
-        <ul>
-          {% for msg in feedback %}
-            <li>{{ msg }}</li>
-          {% endfor %}
-        </ul>
-      </div>
-    {% endif %}
-    <div class="alert alert-success">
-      <strong>Tips to reduce mobile addiction:</strong>
-      <ul>
-        {% for tip in tips %}
-          <li>{{ tip }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-  {% endif %}
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
 
-  {% if error %}
-    <div class="alert alert-danger mt-4">{{ error }}</div>
-  {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label>Screen Time (hours):</label>
+                <input type="number" step="0.1" name="screen_time" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Unlocks per day:</label>
+                <input type="number" name="unlocks" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Social Media Time (hours):</label>
+                <input type="number" step="0.1" name="social_media" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Restless without phone? (0 = No, 1 = Yes):</label>
+                <input type="number" name="restless" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Check phone first in morning? (0 = No, 1 = Yes):</label>
+                <input type="number" name="morning_check" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-success mt-3">Predict</button>
+        </form>
+
+        {% if prediction %}
+            <div class="alert alert-info mt-4">
+                <h4>{{ prediction }}</h4>
+            </div>
+        {% endif %}
+
+        {% if feedback %}
+            <h4 class="mt-4">Feedback:</h4>
+            <ul>
+                {% for fb in feedback %}
+                    <li>{{ fb }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if tips %}
+            <h4 class="mt-4">Tips:</h4>
+            <ul>
+                {% for tip in tips %}
+                    <li>{{ tip }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

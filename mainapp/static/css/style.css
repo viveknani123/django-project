@@ -1,30 +1,50 @@
 body {
-    background-color: #f0f8ff;
+    background: url("../images/mobileaddiction.jpg") no-repeat center center fixed;
+    background-size: cover;
+    background-attachment: fixed;
     font-family: 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
+    min-height: 100vh;
+    color: white; /* Make text white globally */
+}
+
+.overlay {
+    background-color: rgba(0, 0, 0, 0.6); /* Stronger black overlay */
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    color: white;  /* Make sure container text is visible */
+}
+
+h1, h2, h3, p, label {
+    color: white;  /* All labels and text white */
 }
 
 .navbar {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.container {
-    padding-top: 40px;
-}
-
-h1, h2, h3 {
-    color: #333;
-}
-
 .btn {
     border-radius: 10px;
     padding: 10px 20px;
     font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn:hover {
+    transform: scale(1.05);
 }
 
 .card {
     border-radius: 12px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     margin-bottom: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.alert {
+    color: black; /* Bootstrap alert text should be readable */
 }

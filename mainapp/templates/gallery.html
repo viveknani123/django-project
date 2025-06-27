@@ -1,24 +1,22 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-<div class="container mt-5">
-  <h3>Gallery</h3>
-  {% for gallery in galleries %}
-    <div class="mb-4">
-      <h5>{{ gallery.name }}</h5>
-      <p>{{ gallery.description }}</p>
-      <div class="row">
-        {% for image in gallery.images.all %}
-          <div class="col-md-3">
-            <img src="{{ image.image.url }}" class="img-thumbnail mb-2" alt="Gallery Image">
-          </div>
-        {% empty %}
-          <div class="col-12"><em>No images in this gallery.</em></div>
-        {% endfor %}
-      </div>
+<div class="overlay">
+    <div class="container text-white py-5">
+        <h1 class="mb-4">Gallery</h1>
+
+        <div class="row">
+            {% for gallery in galleries %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <img src="{{ gallery.image.url }}" class="card-img-top" alt="Gallery Image">
+                    </div>
+                </div>
+            {% empty %}
+                <p>No images in gallery.</p>
+            {% endfor %}
+        </div>
     </div>
-  {% empty %}
-    <p><em>No galleries found.</em></p>
-  {% endfor %}
 </div>
 {% endblock %}

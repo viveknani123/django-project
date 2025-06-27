@@ -1,14 +1,21 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-<div class="container text-center mt-5">
-  <h1 class="display-4">Welcome to Mobile Addiction Detector</h1>
-  <p class="lead">Detect smartphone addiction using machine learning and user images.</p>
-  <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
-  <a href="{% url 'register' %}" class="btn btn-success">Register</a>
+<div class="container-fluid d-flex align-items-center justify-content-center"
+     style="min-height: 100vh;">
+
+    <div class="text-center text-white p-5 rounded" style="background-color: rgba(0, 0, 0, 0.5);">
+        <h1 class="display-3 mb-4 fw-bold">Welcome to Mobile Addiction Detector</h1>
+        <p class="lead mb-4 fs-4">Detect smartphone addiction using machine learning and user images.</p>
+        <a href="{% url 'login' %}" class="btn btn-primary btn-lg me-3 px-5">Login</a>
+        <a href="{% url 'register' %}" class="btn btn-success btn-lg px-5">Register</a>
+    </div>
+
 </div>
 
 {% if message %}
   <script>alert("{{ message }}")</script>
 {% endif %}
 {% endblock %}
+

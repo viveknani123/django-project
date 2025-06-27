@@ -1,15 +1,20 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-<div class="container mt-5">
-  <h2>About This Project</h2>
-  <p>
-    The <strong>Mobile Addiction Detector</strong> is a machine learning-based web application designed
-    to detect smartphone addiction using user-uploaded images and input data.
-  </p>
-  <p>
-    It provides features like user registration, login, uploading images, predicting addiction,
-    training the model, viewing results, and visualizing graphs.
-  </p>
+<div class="overlay">
+    <div class="container py-5 text-center">
+        <h1 class="mb-4">About Mobile Addiction Detector</h1>
+        <p class="lead">
+            This project helps in detecting mobile phone addiction using machine learning models.
+            It predicts addiction levels based on user input and provides useful feedback and tips to reduce phone usage.
+        </p>
+
+        <img src="{% static 'images/mobileaddiction.jpg' %}" alt="Mobile Addiction" class="img-fluid rounded shadow mt-4" style="max-width: 600px;">
+
+        <p class="mt-4">
+            Our goal is to spread awareness and help people manage their smartphone habits in a healthy way.
+        </p>
+    </div>
 </div>
 {% endblock %}
