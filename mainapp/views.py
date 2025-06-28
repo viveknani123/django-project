@@ -144,7 +144,7 @@ def predict(request):
             restless = int(request.POST.get('restless'))
             morning_check = int(request.POST.get('morning_check'))
 
-            features = [[screen_time, unlocks, social_media, restless, morning_check]]
+            features = [[screen_time, unlocks, social_media, restless]]
             prediction_num = model.predict(features)[0]
 
             if screen_time > 5:

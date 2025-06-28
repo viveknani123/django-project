@@ -1,0 +1,59 @@
+/* Full Page Background with Black Overlay */
+body {
+ background: url("../images/mobileaddiction.jpg") no-repeat center center fixed;   
+  background-size: cover;
+    background-attachment: fixed;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    color: white;
+}
+
+/* Navbar Shadow */
+.navbar {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Overlay Container for Content */
+.overlay {
+    background-color: rgba(0, 0, 0, 0.6);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* Container Text Color */
+.container {
+    color: white;
+}
+
+/* Headings and Labels in White */
+h1, h2, h3, p, label {
+    color: white;
+}
+
+/* Button Styling */
+.btn {
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+}
+
+/* Card Styling */
+.card {
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: black;
+}
+
+/* Alert Text Should be Readable */
+.alert {
+    color: black;
+}
