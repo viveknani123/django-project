@@ -1,26 +1,28 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5" style="max-width: 600px;">
-  <h2 class="mb-4 text-center">Train Module</h2>
-  <form method="post" enctype="multipart/form-data" novalidate>
-    {% csrf_token %}
-    <div class="mb-3">
-      <label for="dataset" class="form-label">Upload Training Dataset</label>
-      <input type="file" class="form-control" id="dataset" name="dataset" accept=".csv,.xlsx" required>
-      <div class="form-text">Accepted formats: CSV, XLSX</div>
-    </div>
-    {% if error %}
-      <div class="alert alert-danger">{{ error }}</div>
+<div class="overlay">
+  <div class="container mt-5" style="max-width: 600px;">
+    <h2 class="mb-4 text-center">Train Module</h2>
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="dataset" class="form-label">Upload Training Dataset</label>
+        <input type="file" class="form-control" id="dataset" name="dataset" accept=".csv" required>
+        <div class="form-text">Accepted format: CSV only</div>
+      </div>
+      {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
+      <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-success">Train Model</button>
+      </div>
+    </form>
+    {% if message %}
+      <div class="alert alert-info mt-4 text-center">
+        {{ message }}
+      </div>
     {% endif %}
-    <div class="d-grid gap-2">
-      <button type="submit" class="btn btn-success">Train Model</button>
-    </div>
-  </form>
-  {% if message %}
-    <div class="alert alert-info mt-4 text-center">
-      {{ message }}
-    </div>
-  {% endif %}
+  </div>
 </div>
 {% endblock %}

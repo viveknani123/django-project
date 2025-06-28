@@ -8,10 +8,18 @@
 
         <div class="row">
             {% for gallery in galleries %}
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <img src="{{ gallery.image.url }}" class="card-img-top" alt="Gallery Image">
-                    </div>
+                <h3>{{ gallery.name }}</h3>  <!-- Gallery name displayed -->
+                <div class="row">
+                    {% for image in gallery.images.all %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card">
+                                <img src="{{ image.image.url }}" class="card-img-top" alt="{{ image.title }}">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ image.title }}</h5>  <!-- Display Image Title -->
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
             {% empty %}
                 <p>No images in gallery.</p>
