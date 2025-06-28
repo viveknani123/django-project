@@ -1,44 +1,65 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-5">
-  <h3 class="mb-4 text-center">Your Mobile Addiction Prediction History</h3>
-  <canvas id="myChart"></canvas>
+<div class="container mt-5 text-white">
+    <h2 class="mb-4">Prediction History Graph</h2>
+
+    {% if labels and data %}
+        <canvas id="myChart" width="400" height="200"></canvas>
+
+        <!-- JSON Safe Variables -->
+        {{ labels|json_script:"labels-data" }}
+        {{ data|json_script:"chart-data" }}
+    {% else %}
+        <p>No prediction history found.</p>
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  // Make sure labels and data are valid JS arrays!
-  const chartLabels = JSON.parse('{{ labels|safe|escapejs }}');
-  const chartData = JSON.parse('{{ data|safe|escapejs }}');
+    // Get JSON safely
+    const labels = JSON.parse(document.getElementById('labels-data').textContent);
+    const data = JSON.parse(document.getElementById('chart-data').textContent);
 
-  const ctx = document.getElementById('myChart').getContext('2d');
-  const myChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: chartLabels,
-      datasets: [{
-        label: 'Risk Level (2=High, 1=Moderate, 0=Low)',
-        data: chartData,
-        fill: false,
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1
-      }]
-    },
-    options: {
-      scales: {
-        y: {
-          ticks: {
-            stepSize: 1,
-            callback: function(value) {
-              if (value === 2) return 'High';
-              if (value === 1) return 'Moderate';
-              return 'Low';
+    const ctx = document.getElementById('myChart').getContext('2d');
+    const myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Mobile Addiction Prediction',
+                data: data,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderWidth: 2,
+                tension: 0.3,
+                pointBackgroundColor: function(context) {
+                    return context.raw === 1 ? 'red' : 'green';
+                },
+                pointRadius: 5
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        callback: function(value) {
+                            return value === 1 ? 'High Risk' : 'Low Risk';
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        autoSkip: true,
+                        maxRotation: 90,
+                        minRotation: 45
+                    }
+                }
             }
-          },
-          min: 0,
-          max: 2
         }
-      }
-    }
-  });
+    });
 </script>
 {% endblock %}

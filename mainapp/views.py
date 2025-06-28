@@ -1,183 +1,213 @@
+import os
+import joblib
+import pandas as pd
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.core.files.storage import FileSystemStorage
-from django.utils.crypto import get_random_string
-from django.views.decorators.csrf import csrf_protect
-from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from .models import UploadedImage, PredictionModel, Gallery, PredictionRecord, Image
-from .forms import ImageUploadForm
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-import pandas as pd
-
-import os
+from django.conf import settings
+from .models import Register, UploadedImage, Image, Gallery, PredictionRecord
+from django.core.files.storage import FileSystemStorage
 import pickle
+import numpy as np
+import matplotlib.pyplot as plt
+import io
+import base64
+import joblib
+import os
+import numpy as np
+import pickle
+import os
 import json
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import PredictionRecord
+from django.conf import settings
 
-# Load ML model at startup
-model = None
-MODEL_DIR = os.path.join(os.path.dirname(__file__), 'model')
-MODEL_PATH = os.path.join(MODEL_DIR, 'model.pkl')
-if os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH) > 100:
-    try:
-        with open(MODEL_PATH, 'rb') as f:
-            model = pickle.load(f)
-    except Exception as e:
-        print(f"Error loading model: {e}")
-else:
-    print(f"Warning: Model not found or is too small at {MODEL_PATH}")
+BASE_DIR = settings.BASE_DIR
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Load Model
+model_path = os.path.join('mainapp', 'model', 'model.pkl')
+with open(model_path, 'rb') as file:
+    model = pickle.load(file)
 
 
-def index(request):
+# Home Page
+def home(request):
     return render(request, 'index.html')
 
-
+# About Page
 def about(request):
     return render(request, 'about.html')
+# User Home Page
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 
+@login_required
+def userhome(request):
+    return render(request, 'userhome.html')
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .models import Register
 
-@csrf_protect
+from django.contrib.auth.models import User
+
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .models import Register
+
 def register(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         email = request.POST.get('email')
         password = request.POST.get('password')
         conpassword = request.POST.get('conpassword')
+        age = request.POST.get('age')
+        contact = request.POST.get('contact')
 
         if password != conpassword:
-            messages.error(request, "Passwords don't match")
-            return render(request, 'register.html')
+            messages.error(request, 'Passwords do not match.')
+            return redirect('register')
 
         if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already exists")
-            return render(request, 'register.html')
-        if User.objects.filter(email=email).exists():
-            messages.error(request, "Email already registered")
-            return render(request, 'register.html')
+            messages.error(request, 'Username already exists.')
+            return redirect('register')
 
+        # Create Django User
         user = User.objects.create_user(username=username, email=email, password=password)
-        user.save()
-        messages.success(request, "Registration successful! You can now login.")
+
+        # Save to custom Register table
+        Register.objects.create(name=username, email=email, password=password, age=age, contact=contact)
+
+        messages.success(request, 'Registration Successful! Please login.')
         return redirect('login')
 
     return render(request, 'register.html')
 
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.shortcuts import render, redirect
 
-@csrf_protect
 def login_view(request):
-    if request.user.is_authenticated:
-        return redirect('userhome')  # Prevent redirect loop
-
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
 
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            auth_login(request, user)
+            login(request, user)
+            messages.success(request, f'Welcome back, {user.username}!')
+
             if user.is_superuser:
                 return redirect('/admin/')
-            next_url = request.GET.get('next')
-            if next_url:
-                return redirect(next_url)
-            return redirect('userhome')
+            else:
+                return redirect('userhome')
         else:
-            messages.error(request, 'Invalid username or password')
+            messages.error(request, 'Invalid username or password.')
+            return redirect('login')  # 🔥 Important to stay on same page on failure
 
     return render(request, 'login.html')
 
-
-@login_required
+# Logout
 def logout_view(request):
-    auth_logout(request)
-    messages.success(request, "Logged out successfully!")
-    return redirect('home')
+    logout(request)
+    return redirect('login')
 
-
+# Upload Image
 @login_required
-def userhome(request):
-    return render(request, 'userhome.html')
-
-
-@login_required
-@csrf_protect
 def upload_image(request):
-    if request.method == 'POST' and request.FILES.get('image'):
-        image = request.FILES['image']
-        if not image.content_type.startswith('image/'):
-            messages.error(request, 'Please upload a valid image file.')
-            return render(request, 'upload_image.html')
-
-        filename = get_random_string(8) + '_' + image.name
-        fs = FileSystemStorage()
-        saved_name = fs.save(filename, image)
-        UploadedImage.objects.create(image=saved_name)
-
-        messages.success(request, "Image uploaded successfully!")
-        return redirect('uploaded_images')
-
+    if request.method == 'POST':
+        uploaded_image = request.FILES['image']
+        UploadedImage.objects.create(image=uploaded_image)
+        messages.success(request, 'Image uploaded successfully!')
+        return redirect('upload_image')
     return render(request, 'upload_image.html')
 
-
-@login_required
-def uploaded_images(request):
-    images = UploadedImage.objects.all().order_by('-uploaded_at')
-    return render(request, 'uploaded_images.html', {'images': images})
-
-
+# Gallery
 @login_required
 def gallery_view(request):
-    galleries = Gallery.objects.all()
+    galleries = Image.objects.all()
     return render(request, 'gallery.html', {'galleries': galleries})
 
+# Train Module
+@login_required
+def train(request):
+    if request.method == 'POST':
+        dataset = request.FILES.get('dataset')
+
+        if not dataset:
+            return render(request, 'train.html', {'error': 'Please upload a dataset file.'})
+
+        if not dataset.name.endswith(('.csv', '.xlsx')):
+            return render(request, 'train.html', {'error': 'Invalid file type. Upload CSV or XLSX only.'})
+
+        save_path = os.path.join('uploads', dataset.name)
+        with open(save_path, 'wb+') as destination:
+            for chunk in dataset.chunks():
+                destination.write(chunk)
+
+        return render(request, 'train.html', {'message': 'Training complete!'})
+
+    return render(request, 'train.html')
+
+# Prediction
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+import numpy as np
+import pickle
+import os
+from .models import PredictionRecord
+from django.conf import settings
 
 @login_required
-@csrf_protect
 def predict(request):
     prediction = None
-    error = None
     feedback = []
     tips = []
+
     if request.method == 'POST':
         try:
-            screen_time = float(request.POST.get('screen_time'))
-            unlocks = int(request.POST.get('unlocks'))
-            social_media = float(request.POST.get('social_media'))
-            restless = int(request.POST.get('restless'))
-            morning_check = int(request.POST.get('morning_check'))
+            screen_time = request.POST.get('screen_time')
+            unlocks = request.POST.get('unlocks')
+            social_media = request.POST.get('social_media')
+            restless = request.POST.get('restless')
+            morning_check = request.POST.get('morning_check')
 
-            features = [[screen_time, unlocks, social_media, restless]]
-            prediction_num = model.predict(features)[0]
+            if not all([screen_time, unlocks, social_media, restless, morning_check]):
+                return render(request, 'predict.html', {'error': 'Please fill all the fields.'})
 
-            if screen_time > 5:
-                feedback.append("Your screen time is high. Try to limit daily usage.")
-            if unlocks > 50:
-                feedback.append("Frequent phone unlocking detected.")
-            if social_media > 3:
-                feedback.append("A lot of time spent on social media apps.")
-            if restless:
-                feedback.append("You feel restless without your phone.")
-            if morning_check:
-                feedback.append("Checking your phone first thing in the morning is a sign of dependency.")
+            screen_time = float(screen_time)
+            unlocks = int(unlocks)
+            social_media = float(social_media)
+            restless = int(restless)
+            morning_check = int(morning_check)
 
-            tips = [
-                "Set daily app usage limits.",
-                "Leave your phone outside the bedroom at night.",
-                "Schedule phone-free activities.",
-                "Try digital detox days."
-            ]
+            input_data = np.array([[screen_time, social_media, restless, morning_check]])
 
-            if prediction_num == 2:
-                prediction = "You are at HIGH risk of mobile addiction."
-            elif prediction_num == 1:
-                prediction = "You show MODERATE signs of mobile addiction."
+            model_path = os.path.join(settings.BASE_DIR, 'mainapp', 'model', 'model.pkl')
+            with open(model_path, 'rb') as f:
+                model = pickle.load(f)
+
+            prediction_result = model.predict(input_data)
+
+            if prediction_result[0] == 1:
+                prediction = "High Risk of Mobile Addiction"
+                feedback.append("You may need to reduce screen time.")
+                feedback.append("Try to limit social media usage.")
+                tips.append("Set daily phone usage limits.")
+                tips.append("Engage in offline activities like sports or reading.")
             else:
-                prediction = "You have a LOW risk of mobile addiction."
+                prediction = "Low Risk of Mobile Addiction"
+                feedback.append("Your usage seems normal.")
+                tips.append("Continue maintaining a balanced phone usage.")
 
+            # Save prediction history
             PredictionRecord.objects.create(
-                user=request.user if request.user.is_authenticated else None,
+                user=request.user,
                 screen_time=screen_time,
                 unlocks=unlocks,
                 social_media=social_media,
@@ -187,67 +217,43 @@ def predict(request):
             )
 
         except Exception as e:
-            error = f"Invalid input: {str(e)}"
+            return render(request, 'predict.html', {'error': str(e)})
 
     return render(request, 'predict.html', {
         'prediction': prediction,
-        'error': error,
         'feedback': feedback,
-        'tips': tips,
+        'tips': tips
     })
 
+
+    
+
+@login_required
+def history(request):
+    records = PredictionRecord.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'history.html', {'records': records})
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import PredictionRecord
 
 @login_required
 def graph(request):
     records = PredictionRecord.objects.filter(user=request.user).order_by('created_at')
-    labels = [record.created_at.strftime("%Y-%m-%d %H:%M") for record in records]
 
-    data = []
-    for record in records:
-        if "HIGH" in record.result:
-            data.append(2)
-        elif "MODERATE" in record.result:
-            data.append(1)
-        else:
-            data.append(0)
+    if not records.exists():
+        return render(request, 'graph.html', {'labels': [], 'data': []})
 
-    return render(request, 'graph.html', {
-        'labels': json.dumps(labels),
-        'data': json.dumps(data)
-    })
+    labels = [record.created_at.strftime('%Y-%m-%d %H:%M:%S') for record in records]
+    data = [1 if "High" in record.result else 0 for record in records]
 
+    return render(request, 'graph.html', {'labels': labels, 'data': data})
+
+from django.contrib.auth.decorators import login_required
+from .models import UploadedImage
+from django.shortcuts import render
 
 @login_required
-def train(request):
-    if request.method == 'POST':
-        dataset = request.FILES.get('dataset')
-
-        if not dataset:
-            return render(request, 'train.html', {'error': 'Please upload a dataset file.'})
-
-        if not dataset.name.endswith('.csv'):
-            return render(request, 'train.html', {'error': 'Invalid file type. Upload CSV only.'})
-
-        try:
-            # Read CSV
-            df = pd.read_csv(dataset)
-
-            # Example columns (match your CSV format)
-            X = df[['screen_time', 'unlocks', 'social_media', 'restless', 'morning_check']]
-            y = df['label']
-
-            # Train the model
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-            model = RandomForestClassifier()
-            model.fit(X_train, y_train)
-
-            # Save the model
-            with open('model.pkl', 'wb') as f:
-                pickle.dump(model, f)
-
-            return render(request, 'train.html', {'message': 'Model trained successfully!'})
-
-        except Exception as e:
-            return render(request, 'train.html', {'error': f'Error: {str(e)}'})
-
-    return render(request, 'train.html')
+def uploaded_images(request):
+    images = UploadedImage.objects.filter(user=request.user).order_by('-uploaded_at')
+    return render(request, 'uploaded_images.html', {'images': images})
