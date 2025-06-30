@@ -4,9 +4,7 @@
     <h2 class="mb-4">Prediction History Graph</h2>
 
     {% if labels and data %}
-        <canvas id="myChart" width="400" height="200"></canvas>
-
-        <!-- JSON Safe Variables -->
+        <canvas id="myChart" width="400" height="200" aria-label="Prediction history line chart" role="img"></canvas>
         {{ labels|json_script:"labels-data" }}
         {{ data|json_script:"chart-data" }}
     {% else %}
@@ -17,6 +15,7 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% if labels and data %}
 <script>
     // Get JSON safely
     const labels = JSON.parse(document.getElementById('labels-data').textContent);
@@ -62,4 +61,5 @@
         }
     });
 </script>
+{% endif %}
 {% endblock %}

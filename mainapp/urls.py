@@ -23,10 +23,12 @@ urlpatterns = [
     path('train/', views.train, name='train'),
     path('predict/', views.predict, name='predict'),
     path('history/', views.history, name='history'),
-
+    path('create_prediction/', views.create_prediction, name='create_prediction'),
     # Image Upload
     path('upload/', views.upload_image, name='upload_image'),
     path('uploaded-images/', views.uploaded_images, name='uploaded_images'),
+    path('prediction-history-graph/', views.prediction_history_graph, name='prediction_history_graph'),
+
 ]
 
 # For serving media files during development

@@ -8,9 +8,9 @@
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>Screen Time</th>
+                    <th>Screen Time (hrs)</th>
                     <th>Unlocks</th>
-                    <th>Social Media</th>
+                    <th>Social Media (hrs)</th>
                     <th>Restless</th>
                     <th>Morning Check</th>
                     <th>Result</th>
@@ -19,12 +19,12 @@
             <tbody>
                 {% for record in records %}
                     <tr>
-                        <td>{{ record.created_at }}</td>
+                        <td>{{ record.created_at|date:"Y-m-d H:i" }}</td>
                         <td>{{ record.screen_time }}</td>
                         <td>{{ record.unlocks }}</td>
                         <td>{{ record.social_media }}</td>
-                        <td>{{ record.restless }}</td>
-                        <td>{{ record.morning_check }}</td>
+                        <td>{% if record.restless %}Yes{% else %}No{% endif %}</td>
+                        <td>{% if record.morning_check %}Yes{% else %}No{% endif %}</td>
                         <td>{{ record.result }}</td>
                     </tr>
                 {% endfor %}
