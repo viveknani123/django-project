@@ -17,7 +17,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% if labels and data %}
 <script>
-    // Get JSON safely
     const labels = JSON.parse(document.getElementById('labels-data').textContent);
     const data = JSON.parse(document.getElementById('chart-data').textContent);
 
@@ -27,34 +26,35 @@
         data: {
             labels: labels,
             datasets: [{
-                label: 'Mobile Addiction Prediction',
+                label: 'Screen Time (hrs)',
                 data: data,
                 borderColor: 'rgba(255, 99, 132, 1)',
                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
                 borderWidth: 2,
                 tension: 0.3,
-                pointBackgroundColor: function(context) {
-                    return context.raw === 1 ? 'red' : 'green';
-                },
-                pointRadius: 5
+                pointRadius: 4,
+                pointBackgroundColor: 'blue'
             }]
         },
         options: {
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Screen Time History'
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        stepSize: 1,
-                        callback: function(value) {
-                            return value === 1 ? 'High Risk' : 'Low Risk';
-                        }
+                    title: {
+                        display: true,
+                        text: 'Screen Time (hrs)'
                     }
                 },
                 x: {
-                    ticks: {
-                        autoSkip: true,
-                        maxRotation: 90,
-                        minRotation: 45
+                    title: {
+                        display: true,
+                        text: 'Date & Time'
                     }
                 }
             }

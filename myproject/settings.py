@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,8 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-2v!8*sl3zbr$c#f&3w*__zo62pxbon03t#8)c1jfc9+yb(7a0b'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-ALLOWED_HOSTS = ['yourdomain.com', 'www.yourdomain.com']
+DEBUG = True
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'unsafe-default-key')
 
@@ -127,3 +128,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Redirect to home page after login
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = 'login'
+
+from django.core.management import execute_from_command_line
+execute_from_command_line(sys.argv)

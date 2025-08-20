@@ -167,14 +167,12 @@ from django.shortcuts import render
 from .models import PredictionRecord
 @login_required
 def graph(request):
-    # Get all predictions
-    predictions = PredictionRecord.objects.all()
-    # Prepare data for graph (example: screen_time and unlocks)
-    screen_times = [p.screen_time for p in predictions]
-    unlocks = [p.unlocks for p in predictions]
+    predictions = PredictionRecord.objects.filter(user=request.user).order_by('created_at')
+    labels = [p.created_at.strftime('%Y-%m-%d %H:%M') for p in predictions]
+    data = [p.screen_time for p in predictions]  # Use screen_time for up/down lines
     return render(request, "graph.html", {
-        "screen_times": screen_times,
-        "unlocks": unlocks,
+        "labels": labels,
+        "data": data,
     })
 @login_required
 def history(request):

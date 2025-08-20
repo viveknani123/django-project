@@ -1,0 +1,33 @@
+<!-- filepath: c:\Users\D VIVEK\django_project\django-project\mainapp\templates\history.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h1>Prediction History</h1>
+    {% if records %}
+        <table class="table table-striped table-bordered">
+            <tr>
+                <th>Date</th>
+                <th>Screen Time</th>
+                <th>Unlocks</th>
+                <th>Social Media</th>
+                <th>Restless</th>
+                <th>Morning Check</th>
+                <th>Result</th>
+            </tr>
+            {% for record in records %}
+            <tr>
+                <td>{{ record.created_at|date:"Y-m-d H:i" }}</td>
+                <td>{{ record.screen_time }}</td>
+                <td>{{ record.unlocks }}</td>
+                <td>{{ record.social_media }}</td>
+                <td>{% if record.restless %}Yes{% else %}No{% endif %}</td>
+                <td>{% if record.morning_check %}Yes{% else %}No{% endif %}</td>
+                <td>{{ record.result }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No prediction history found.</p>
+    {% endif %}
+</div>
+{% endblock %}
